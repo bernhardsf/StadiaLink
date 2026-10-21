@@ -1,3 +1,8 @@
+## 1.0.5
+
+- Remove the redistribution warning from the app, setup, and updater About text.
+- Refresh documentation and screenshots; retain GPLv3 licensing and attribution.
+
 ## 1.0.4
 
 - Restore live battery level in the notification-area icon, with low-battery color and charging indicator.

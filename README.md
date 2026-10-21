@@ -6,7 +6,7 @@
 
 Configure your Stadia controller on **Windows 11 x64**. Button mapping, keyboard shortcuts, stick and trigger tuning, vibration, profiles, and battery status over USB or Bluetooth.
 
-**1.0.4 · Personal fork · GPL-3.0**
+**1.0.5 · Personal fork · GPL-3.0**
 
 ![StadiaLink controller screen, rendered from the Windows app](docs/images/controller.png)
 
