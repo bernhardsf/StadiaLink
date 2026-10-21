@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Moved the controller picker into the sidebar so you can switch pads from any page.
+- Fixed English UI text being smashed by leftover phrase replacement.
+- Keep the local self-signed signer in Root so Windows 11 will load the driver.
+
 ## 1.0.2
 
 - Improved vibration gain, live adjustments and full-range tests.

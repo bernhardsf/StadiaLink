@@ -34,7 +34,7 @@ namespace StadiaStudio {
         readonly DispatcherTimer timer=new DispatcherTimer();DateTime nextDiscovery=DateTime.MinValue;
         readonly Grid page=new Grid();readonly TextBlock footer=Ui.T("Buscando tu Stadia…",12,Ui.Muted);
         readonly TextBlock connection=Ui.T("BUSCANDO MANDO",10,Ui.Muted,true),deviceText=Ui.T("Sin conexión",12,Ui.Muted);
-        readonly ComboBox profilePicker=new ComboBox{Width=170},devicePicker=new ComboBox{MinWidth=210};
+        readonly ComboBox profilePicker=new ComboBox{Width=170},devicePicker=new ComboBox{MinWidth=0,MinHeight=32,HorizontalAlignment=HorizontalAlignment.Stretch,FontSize=11};
         readonly Dictionary<string,Button> navigation=new Dictionary<string,Button>();
         readonly List<Action<PadStatus>> live=new List<Action<PadStatus>>();
         Button apply;ControllerVisual visual;ComboBox sourcePicker,destinationPicker;TextBlock selectedText,selectedHint,saveState;
@@ -87,7 +87,8 @@ namespace StadiaStudio {
                 string target=name;Button b=Ui.Button(name,()=>Navigate(target,true));b.HorizontalContentAlignment=HorizontalAlignment.Left;b.Margin=new Thickness(0,0,0,8);b.BorderThickness=new Thickness(0);
                 navigation[name]=b;nav.Children.Add(b);
             }
-            StackPanel sideFoot=new StackPanel();sideFoot.Children.Add(connection);sideFoot.Children.Add(Ui.Gap(8));sideFoot.Children.Add(deviceText);sideFoot.Children.Add(Ui.Gap(8));sideFoot.Children.Add(batteryText);sideFoot.Children.Add(Ui.Gap(20));sideFoot.Children.Add(Ui.T(Brand.Stamp,10,Ui.Muted));Grid.SetRow(sideFoot,2);side.Children.Add(sideFoot);sidebar.Child=side;shell.Children.Add(sidebar);
+            I18n.Tooltip(devicePicker,"Tu dispositivo");devicePicker.SelectionChanged+=DeviceChanged;
+            StackPanel sideFoot=new StackPanel();sideFoot.Children.Add(connection);sideFoot.Children.Add(Ui.Gap(8));sideFoot.Children.Add(devicePicker);sideFoot.Children.Add(Ui.Gap(8));sideFoot.Children.Add(batteryText);sideFoot.Children.Add(Ui.Gap(20));sideFoot.Children.Add(Ui.T(Brand.Stamp,10,Ui.Muted));Grid.SetRow(sideFoot,2);side.Children.Add(sideFoot);sidebar.Child=side;shell.Children.Add(sidebar);
             Grid main=new Grid{Margin=new Thickness(30,0,30,0)};Grid.SetColumn(main,1);shell.Children.Add(main);
             main.RowDefinitions.Add(new RowDefinition{Height=new GridLength(34)});main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});main.RowDefinitions.Add(new RowDefinition());main.RowDefinitions.Add(new RowDefinition{Height=new GridLength(30)});
             Grid chrome=new Grid();chrome.MouseLeftButtonDown+=(s,e)=>{if(e.ClickCount==2)WindowState=WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;else if(e.LeftButton==MouseButtonState.Pressed)DragMove();};
@@ -274,8 +275,7 @@ namespace StadiaStudio {
             StackPanel language=Section("LINK","Idioma","");ComboBox languages=new ComboBox{ItemsSource=I18n.Options,ItemTemplate=I18n.LanguageTemplate(),SelectedItem=I18n.Options.First(o=>o.Code==draftLanguage),MinWidth=260,HorizontalAlignment=HorizontalAlignment.Left};languages.SelectionChanged+=(s,e)=>{LanguageOption choice=languages.SelectedItem as LanguageOption;if(choice!=null&&choice.Code!=I18n.Code){draftLanguage=choice.Code;I18n.Set(choice.Code);FillProfiles();preferencesDirty=true;MarkDirty();I18n.TranslateTree(Content as DependencyObject);Navigate(route);}};languagePicker=languages;language.Children.Add(languages);content.Children.Add(Ui.Card(language));content.Children.Add(Ui.Gap(20));
             StackPanel quick=Section("ATAJOS","Voz y accesos rápidos","");
             foreach(int source in new[]{12,11,10}){int id=source;string label=id==12?"Pulsar para hablar · Asistente":id==11?"Silenciar / activar micrófono · Captura":"Atajo adicional · Stadia";quick.Children.Add(Ui.Button(label,()=>EditVoiceShortcut(id,label)));quick.Children.Add(Ui.Gap(8));}content.Children.Add(Ui.Card(quick));content.Children.Add(Ui.Gap(20));
-            Panel previousParent=devicePicker.Parent as Panel;if(previousParent!=null)previousParent.Children.Remove(devicePicker);
-            StackPanel card=Section("CONEXIÓN","Tu dispositivo","");devicePicker.ItemsSource=available;devicePicker.SelectedItem=available.FirstOrDefault(p=>pad!=null&&p.Path==pad.Path);devicePicker.SelectionChanged-=DeviceChanged;devicePicker.SelectionChanged+=DeviceChanged;card.Children.Add(devicePicker);card.Children.Add(Ui.Gap(15));TextBlock detail=Ui.T("",12,Ui.Muted);card.Children.Add(detail);
+            StackPanel card=Section("CONEXIÓN","Tu dispositivo","");TextBlock detail=Ui.T("",12,Ui.Muted);card.Children.Add(detail);
             live.Add(s=>I18n.SetText(detail,s==null?"Enciende el Stadia y emparéjalo desde los ajustes Bluetooth de Windows.":s.ConfigVersion!=1?"Mando detectado. Instala el controlador incluido para activar la configuración.":"Conectado por "+(s.Bluetooth?"Bluetooth":"USB")));
             card.Children.Add(Ui.Gap(20));StackPanel buttons=new StackPanel{Orientation=Orientation.Horizontal};buttons.Children.Add(Ui.Button("Abrir ajustes Bluetooth",()=>RunSync(()=>Process.Start("ms-settings:bluetooth"))));Button rescan=Ui.Button("Volver a detectar",()=>{nextDiscovery=DateTime.MinValue;Poll();});rescan.Margin=new Thickness(10,0,0,0);buttons.Children.Add(rescan);card.Children.Add(buttons);card.Children.Add(Ui.Gap(10));card.Children.Add(Ui.T("Install the driver with this build's Setup.exe, or driver\\install.ps1 in an administrator console.",12,Ui.Muted));content.Children.Add(Ui.Card(card));content.Children.Add(Ui.Gap(20));
             StackPanel response=Section("RENDIMIENTO","Tiempo de respuesta","");TextBlock measurement=Ui.T("Tiempos de la aplicación",12,Ui.Muted);response.Children.Add(measurement);response.Children.Add(Ui.Gap(12));response.Children.Add(Ui.Button("Medir durante 6 s",()=>Run(()=>MeasureResponse(measurement))));response.Children.Add(Ui.Gap(8));response.Children.Add(Ui.Button("Abrir informe",()=>RunSync(()=>{string report=Path.Combine(ProfileLibrary.DirectoryPath,"logs","response.txt");if(File.Exists(report))Process.Start(report);})));content.Children.Add(Ui.Card(response));content.Children.Add(Ui.Gap(20));
@@ -287,6 +287,7 @@ namespace StadiaStudio {
             StackPanel about=Section("LINK","Archivos","");
             about.Children.Add(Ui.Button("Abrir carpeta de perfiles",()=>RunSync(()=>{Directory.CreateDirectory(ProfileLibrary.DirectoryPath);Process.Start(ProfileLibrary.DirectoryPath);})));about.Children.Add(Ui.Gap(16));about.Children.Add(Ui.T(Brand.About,12,Ui.Muted));about.Children.Add(Ui.Gap(8));about.Children.Add(Ui.T("",12,Ui.Muted));content.Children.Add(Ui.Card(about));page.Children.Add(new ScrollViewer{Content=content});
         }
+        void RefreshDevicePicker(){devicePicker.SelectionChanged-=DeviceChanged;devicePicker.ItemsSource=available;devicePicker.SelectedItem=available.FirstOrDefault(p=>pad!=null&&p.Path==pad.Path);devicePicker.IsEnabled=available.Count>0;devicePicker.SelectionChanged+=DeviceChanged;}
         void DeviceChanged(object sender,SelectionChangedEventArgs e){PadInfo info=devicePicker.SelectedItem as PadInfo;if(info==null || (pad!=null && pad.Path==info.Path))return;RunSync(()=>{if(pad!=null)pad.Dispose();pad=new Controller(info.Path);status=null;loadedHardware=null;activeActions=null;desktopActions.Release();batteryLevel=null;nextBattery=DateTime.MinValue;pendingApply=false;nextDiscovery=DateTime.UtcNow.AddSeconds(2);});}
         async Task ApplyDraft() {
             draft.Validate();if(library.Profiles.Any(p=>p.Name.Equals(draft.Name,StringComparison.OrdinalIgnoreCase)&&p.Name!=originalName))throw new InvalidOperationException("Ya existe un perfil con ese nombre.");
@@ -341,8 +342,8 @@ namespace StadiaStudio {
             if(pollBusy || closed)return;pollBusy=true;
             try {
                 if(DateTime.UtcNow>=nextDiscovery){nextDiscovery=DateTime.UtcNow.AddSeconds(2);List<PadInfo> found=await Task.Run(()=>Controller.Find());bool listChanged=!available.Select(p=>p.Path).SequenceEqual(found.Select(p=>p.Path));available=found;if(closed)return;
-                    if(pad==null && available.Count>0){pad=new Controller(available[0].Path);loadedHardware=null;I18n.SetText(footer,"Stadia detectado. Listo para configurar.");}
-                    if(route=="Ajustes" && listChanged){devicePicker.SelectionChanged-=DeviceChanged;devicePicker.ItemsSource=available;devicePicker.SelectedItem=available.FirstOrDefault(p=>pad!=null&&p.Path==pad.Path);devicePicker.SelectionChanged+=DeviceChanged;}
+                    if(pad==null && available.Count>0){pad=new Controller(available[0].Path);loadedHardware=null;I18n.SetText(footer,"Stadia detectado. Listo para configurar.");listChanged=true;}
+                    if(listChanged)RefreshDevicePicker();
                 }
                 if(pad!=null){Controller device=pad;if(failedDevice==device)throw new IOException("Controller disconnected.");if(sampledDevice!=device||latestSample==null)return;status=latestSample;if(closed)return;
                     if(status.ConfigVersion==1 && loadedHardware==null){loadedHardware=await Task.Run(()=>device.Configuration());
@@ -355,7 +356,7 @@ namespace StadiaStudio {
                         if(pendingApply){Profile saved=library.Profiles.First(p=>p.Name==originalName).Clone();await motorUpdate;await Task.Run(()=>{lock(device)device.Apply(saved);});activeActions=saved;pendingApply=false;I18n.SetText(footer,"Perfil aplicado.");}
                     }
                 }
-            }catch(Exception){if(pad!=null)pad.Dispose();pad=null;status=null;loadedHardware=null;activeActions=null;desktopActions.Release();batteryLevel=null;}
+            }catch(Exception){if(pad!=null)pad.Dispose();pad=null;status=null;loadedHardware=null;activeActions=null;desktopActions.Release();batteryLevel=null;RefreshDevicePicker();}
             finally{pollBusy=false;}
         }
         void SampleInput(){IntPtr wait=CreateWaitableTimerExW(IntPtr.Zero,null,2,0x1F0003);try{while(!stopSampling){Controller device=pad;if(device!=null&&failedDevice!=device){try{long began=Stopwatch.GetTimestamp();PadStatus read=device.Read();long completed=Stopwatch.GetTimestamp();read.SampleTicks=completed;lock(timingGate){if(readTimes.Count<12000)readTimes.Add((completed-began)*1000.0/Stopwatch.Frequency);if(previousReadTicks!=0&&readIntervals.Count<12000)readIntervals.Add((completed-previousReadTicks)*1000.0/Stopwatch.Frequency);previousReadTicks=completed;}latestSample=read;sampledDevice=device;Interlocked.Increment(ref sampleCount);inputSamples.Enqueue(Tuple.Create(device,read));while(inputSamples.Count>256){Tuple<Controller,PadStatus> discarded;inputSamples.TryDequeue(out discarded);}}catch{failedDevice=device;}}if(wait!=IntPtr.Zero){long due=device==null?-1000000:-40000;if(SetWaitableTimer(wait,ref due,0,IntPtr.Zero,IntPtr.Zero,false))WaitForSingleObject(wait,120);else Thread.Sleep(4);}else Thread.Sleep(device==null?100:4);}}finally{if(wait!=IntPtr.Zero)CloseHandle(wait);}}

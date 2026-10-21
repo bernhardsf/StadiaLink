@@ -1,6 +1,8 @@
 # Signs the locally built UMDF package for THIS machine only and installs it.
-# Does not elevate itself. Open an administrator PowerShell and run this from
-# the git checkout. Trust goes in TrustedPublisher only — never Root.
+# Does not elevate itself. Open an administrator PowerShell or the branded
+# Setup.exe. Windows 11 will not accept a self-signed catalog unless the
+# signer is in both TrustedPublisher and Root; the private key is deleted
+# immediately after signing.
 param([switch]$Uninstall,[switch]$Reconnect)
 
 $ErrorActionPreference = 'Stop'
@@ -13,7 +15,7 @@ $cat = Join-Path $pkg 'winstadia.cat'
 $log = Join-Path (Split-Path $pkg -Parent) 'install.log'
 $certSubject = 'CN=bernhardsf StadiaLink local'
 $legacySubject = 'CN=WinStadia driver signing'
-$stores = 'TrustedPublisher'
+$stores = 'TrustedPublisher', 'Root'
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $admin = [Security.Principal.WindowsBuiltInRole]::Administrator
@@ -44,9 +46,9 @@ function Remove-Trust([scriptblock]$filter = { $true }) {
 # with it.
 function Add-Signature {
     $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $certSubject `
-        -CertStoreLocation Cert:\LocalMachine\My -KeyExportPolicy NonExportable -NotAfter (Get-Date).AddYears(30)
+        -CertStoreLocation Cert:\LocalMachine\My -KeyExportPolicy NonExportable -NotAfter (Get-Date).AddYears(5)
+    $thumbprint = $cert.Thumbprint
     try {
-        # Signing checks the result, so the trust has to be there first.
         $public = New-Object Security.Cryptography.X509Certificates.X509Certificate2 (, $cert.RawData)
         foreach ($store in $stores) {
             $target = New-Object Security.Cryptography.X509Certificates.X509Store $store, 'LocalMachine'
@@ -60,9 +62,9 @@ function Add-Signature {
         $signature = Set-AuthenticodeSignature -FilePath $cat -Certificate $cert -HashAlgorithm SHA256
         if ($signature.Status -ne 'Valid') { throw "signing failed: $($signature.StatusMessage)" }
     } finally {
-        Remove-Item $cert.PSPath -DeleteKey
+        Remove-Item $cert.PSPath -DeleteKey -ErrorAction SilentlyContinue
     }
-    $cert.Thumbprint
+    $thumbprint
 }
 
 $failed = $false
