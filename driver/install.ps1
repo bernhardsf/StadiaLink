@@ -1,32 +1,24 @@
-# Installs (or with -Uninstall removes) the driver package, built by build.ps1
-# or taken from a release: signs it for this machine and puts the driver on
-# Stadia controllers, connected now or later.
-# Elevates itself; output goes to install.log next to the package.
+# Signs the locally built UMDF package for THIS machine only and installs it.
+# Does not elevate itself. Open an administrator PowerShell and run this from
+# the git checkout. Trust goes in TrustedPublisher only — never Root.
 param([switch]$Uninstall,[switch]$Reconnect)
 
 $ErrorActionPreference = 'Stop'
 Import-Module Microsoft.PowerShell.Security
 
-# A release has the package next to this script, a checkout has it in the
-# build output.
 $pkg = Join-Path $PSScriptRoot 'pkg'
 if (-not (Test-Path $pkg)) { $pkg = Join-Path $PSScriptRoot 'out\pkg' }
 $inf = Join-Path $pkg 'winstadia.inf'
 $cat = Join-Path $pkg 'winstadia.cat'
 $log = Join-Path (Split-Path $pkg -Parent) 'install.log'
-$certSubject = 'CN=WinStadia driver signing'
-$stores = 'Root', 'TrustedPublisher'
+$certSubject = 'CN=bernhardsf StadiaLink local'
+$legacySubject = 'CN=WinStadia driver signing'
+$stores = 'TrustedPublisher'
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $admin = [Security.Principal.WindowsBuiltInRole]::Administrator
 if (-not ([Security.Principal.WindowsPrincipal]$identity).IsInRole($admin)) {
-    $arguments = '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`""
-    if ($Uninstall) { $arguments += '-Uninstall' }
-    if ($Reconnect) { $arguments += '-Reconnect' }
-    $process = Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -Wait -PassThru -ArgumentList $arguments
-    Get-Content $log
-    if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
-    return
+    throw 'Open an elevated PowerShell (Run as administrator) or the branded Setup.exe. This script will not self-elevate.'
 }
 
 # Driver packages of this driver in the driver store, whatever their version.
@@ -38,9 +30,9 @@ function Get-InstalledPackage {
 # Takes the trust away from this driver's certificates, from all of them or
 # from those the filter picks.
 function Remove-Trust([scriptblock]$filter = { $true }) {
-    foreach ($store in $stores) {
+    foreach ($store in @('TrustedPublisher', 'Root', 'My')) {
         Get-ChildItem "Cert:\LocalMachine\$store" |
-            Where-Object { $_.Subject -eq $certSubject } |
+            Where-Object { $_.Subject -eq $certSubject -or $_.Subject -eq $legacySubject } |
             Where-Object $filter |
             Remove-Item
     }

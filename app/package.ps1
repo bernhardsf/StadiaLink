@@ -38,8 +38,8 @@ $hashSource=Join-Path $scratch 'PayloadInfo.cs'
 Set-Content -LiteralPath $hashSource -Value ('namespace StadiaStudio { public static class PayloadInfo { public const string Sha256="'+$hash+'"; } }') -Encoding utf8
 $framework="$env:windir\Microsoft.NET\Framework64\v4.0.30319"
 $refs=@('System.dll','System.Core.dll','System.Runtime.Serialization.dll','System.Xaml.dll','System.IO.Compression.dll','System.IO.Compression.FileSystem.dll','WPF\WindowsBase.dll','WPF\PresentationCore.dll','WPF\PresentationFramework.dll') | ForEach-Object { '/reference:'+(Join-Path $framework $_) }
-$sources='Setup.cs','Ui.cs','Model.cs','InstallerActions.cs','I18n.cs','UpdatePackage.cs' | ForEach-Object {Join-Path $PSScriptRoot $_}
-& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 /win32manifest:"$PSScriptRoot\app.manifest" /win32icon:"$PSScriptRoot\StadiaLink.ico" /out:"$release\StadiaLink.Setup.exe" /resource:"$payload,payload.zip" /resource:"$root\LICENSE,LICENSE" /resource:"$PSScriptRoot\assets\locales.tsv,locales.tsv" $refs $sources $hashSource
+$sources='Setup.cs','Brand.cs','Ui.cs','Model.cs','InstallerActions.cs','I18n.cs','UpdatePackage.cs' | ForEach-Object {Join-Path $PSScriptRoot $_}
+& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 /win32manifest:"$PSScriptRoot\setup.manifest" /win32icon:"$PSScriptRoot\StadiaLink.ico" /out:"$release\StadiaLink.Setup.exe" /resource:"$payload,payload.zip" /resource:"$root\LICENSE,LICENSE" /resource:"$PSScriptRoot\assets\locales.tsv,locales.tsv" $refs $sources $hashSource
 if($LASTEXITCODE){throw 'Installer compilation failed'}
 Copy-Item "$PSScriptRoot\StadiaLink.exe.config" "$release\StadiaLink.Setup.exe.config"
 Get-FileHash "$release\StadiaLink.Setup.exe" -Algorithm SHA256 | ForEach-Object { $_.Hash+'  StadiaLink.Setup.exe' } | Set-Content "$release\SHA256.txt"

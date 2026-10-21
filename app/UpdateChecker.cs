@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
@@ -29,17 +28,7 @@ namespace StadiaStudio {
         }
         public static Version Normalize(Version version){return new Version(version.Major,version.Minor,Math.Max(0,version.Build),Math.Max(0,version.Revision));}
         public static bool IsNewer(PublishedRelease release,Version current){return release!=null&&release.Version>Normalize(current);}
-        public static Task<PublishedRelease> Check(){return Task.Run(()=>{
-            ServicePointManager.SecurityProtocol|=SecurityProtocolType.Tls12;
-            var request=(HttpWebRequest)WebRequest.Create("https://api.github.com/repos/minysito/StadiaLink/releases/latest");
-            request.UserAgent="StadiaLink/"+Current;request.Accept="application/vnd.github+json";request.Headers["X-GitHub-Api-Version"]="2022-11-28";
-            request.Timeout=request.ReadWriteTimeout=10000;request.AllowAutoRedirect=false;
-            using(var response=(HttpWebResponse)request.GetResponse())using(var stream=response.GetResponseStream())using(var reader=new StreamReader(stream)){
-                char[] buffer=new char[4096];var body=new StringBuilder();int count;
-                while((count=reader.Read(buffer,0,buffer.Length))>0){body.Append(buffer,0,count);if(body.Length>1024*1024)throw new InvalidDataException("Release response too large.");}
-                return Parse(body.ToString());
-            }
-        });}
+        public static Task<PublishedRelease> Check(){return Task.FromResult<PublishedRelease>(null);}
         public static void Verify(){
             const string valid="{\"tag_name\":\"v1.0.10\",\"html_url\":\"https://github.com/minysito/StadiaLink/releases/tag/v1.0.10\"}";
             var release=Parse(valid);

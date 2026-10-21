@@ -7,9 +7,9 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Reflection;
 
-[assembly:AssemblyTitle("StadiaLink")]
-[assembly:AssemblyDescription("Native Stadia controller settings")]
-[assembly:AssemblyCompany("StadiaLink")]
+[assembly:AssemblyTitle("StadiaLink (local)")]
+[assembly:AssemblyDescription("Personal local build by bernhardsf. Do not distribute.")]
+[assembly:AssemblyCompany("bernhardsf")]
 [assembly:AssemblyProduct("StadiaLink")]
 [assembly:AssemblyVersion("1.0.2.0")]
 [assembly:AssemblyFileVersion("1.0.2.0")]

@@ -16,7 +16,7 @@ namespace StadiaStudio {
   string lastLanguage;bool updateNotice;public Action UpdateClicked;
   [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
   public BatteryTray(Action open,Action exit){
-   logo=Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);tray.Icon=logo;tray.Text=I18n.T("StadiaLink");
+   logo=Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);tray.Icon=logo;tray.Text=Brand.Title;
    var menu=new Forms.ContextMenuStrip();menu.BackColor=Color.FromArgb(26,34,37);menu.ForeColor=Color.FromArgb(233,238,235);menu.Items.Add(level);menu.Items.Add(new Forms.ToolStripSeparator());menu.Items.Add(I18n.T("Abrir StadiaLink"),null,(s,e)=>open()).Tag="Abrir StadiaLink";menu.Items.Add(I18n.T("Salir"),null,(s,e)=>exit()).Tag="Salir";tray.ContextMenuStrip=menu;tray.BalloonTipClicked+=(s,e)=>{if(updateNotice&&UpdateClicked!=null)UpdateClicked();else open();};tray.DoubleClick+=(s,e)=>open();tray.Visible=true;
    noticeTimer.Tick+=(s,e)=>{if(pending.Count==0)noticeTimer.Stop();else ShowNotice(pending.Dequeue());};
   }
