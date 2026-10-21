@@ -1,0 +1,28 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="48" Height="48">
+<Path Data="M30 16h3c6.1 0 11 4.9 11 11v6c0 6.1-4.9 11-11 11H21c-6.1 0-11-4.9-11-11v-3h9v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3z">
+<Path.Fill><LinearGradientBrush MappingMode="Absolute" StartPoint="12,17" EndPoint="40,45">
+<GradientStop Color="#FF4977FF" Offset="0"/>
+<GradientStop Color="#FF2355DE" Offset=".5"/>
+<GradientStop Color="#FF17359B" Offset="1"/>
+</LinearGradientBrush></Path.Fill>
+</Path>
+<Path Data="M19 24v9a2 2 0 0 0 2 2h7v-9z">
+<Path.Fill><LinearGradientBrush MappingMode="Absolute" StartPoint="17,19" EndPoint="32,32">
+<GradientStop Color="#FF126BAC" Offset="0"/>
+<GradientStop Color="#FF1944B4" Offset="1"/>
+</LinearGradientBrush></Path.Fill>
+</Path>
+<Path Data="M15 4h12c6.1 0 11 4.9 11 11v3h-9v-3a2 2 0 0 0-2-2H15a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a11 11 0 0 1 11 11v1h-9v-1a2 2 0 0 0-2-2H15C8.9 32 4 27.1 4 21v-6C4 8.9 8.9 4 15 4z">
+<Path.Fill><LinearGradientBrush MappingMode="Absolute" StartPoint="10,5" EndPoint="36,31">
+<GradientStop Color="#FF96F8E4" Offset="0"/>
+<GradientStop Color="#FF31D7CF" Offset=".42"/>
+<GradientStop Color="#FF0798BB" Offset="1"/>
+</LinearGradientBrush></Path.Fill>
+</Path>
+<Path Data="M5 15C5 9.5 9.5 5 15 5h12c5.5 0 10 4.5 10 10" StrokeThickness="1" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+<Path.Stroke><LinearGradientBrush MappingMode="Absolute" StartPoint="12,5" EndPoint="32,21">
+<GradientStop Color="#CCD4FFF6" Offset="0"/>
+<GradientStop Color="#006CF5E6" Offset="1"/>
+</LinearGradientBrush></Path.Stroke>
+</Path>
+</Canvas>

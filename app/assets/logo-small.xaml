@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="16" Height="16">
+<Path Data="M10 5h1a4 4 0 0 1 4 4v2a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-1h3v1a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-1z">
+<Path.Fill><SolidColorBrush Color="#3769EE"/></Path.Fill>
+</Path>
+<Path Data="M5 1h4a4 4 0 0 1 4 4v1h-3V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h4a4 4 0 0 1 4 4h-3a1 1 0 0 0-1-1H5a4 4 0 0 1-4-4V5a4 4 0 0 1 4-4z">
+<Path.Fill><SolidColorBrush Color="#46DFCF"/></Path.Fill>
+</Path>
+</Canvas>
