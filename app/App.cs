@@ -16,6 +16,7 @@ using System.Reflection;
 
 namespace StadiaStudio {
     public static class Entry {
+        [System.Runtime.InteropServices.DllImport("shell32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode)] static extern int SetCurrentProcessExplicitAppUserModelID(string id);
         [STAThread] public static int Main(string[] args) {
             try {
                 if(args.Length==1 && args[0]=="--register-app") {bool startup=InstallerActions.StartWithWindows,notices=InstallerActions.Notifications;InstallerActions.RegisterApp();InstallerActions.SavePreferences(startup,notices);return 0;}
@@ -27,6 +28,7 @@ namespace StadiaStudio {
                 using(Mutex mutex=new Mutex(false,@"Local\StadiaStudio.App")) {
                     bool acquired=false;try{acquired=mutex.WaitOne(0);}catch(AbandonedMutexException){acquired=true;}
                     if(!acquired){if(!args.Contains("--tray"))MessageBox.Show(I18n.T("StadiaLink ya está abierto."),"StadiaLink");return 0;}
+                    SetCurrentProcessExplicitAppUserModelID("StadiaLink.Desktop.Fluent");
                     Application app=new Application();app.DispatcherUnhandledException+=(s,e)=>{string log=Log(e.Exception);MessageBox.Show(I18n.T("Se produjo un error. Detalles en ")+log,"StadiaLink");e.Handled=true;};
                     MainWindow window=new MainWindow();
                     if(args.Length==2&&args[0]=="--motor-live-test")window.Loaded+=async(s,e)=>{try{await window.VerifyLiveMotorGains(args[1]);}catch(Exception ex){File.WriteAllText(args[1]+".error.txt",ex.ToString());Environment.ExitCode=1;}finally{window.Close();}};
@@ -39,7 +41,7 @@ namespace StadiaStudio {
                     if(args.Length==2&&args[0]=="--features-test")window.Loaded+=(s,e)=>{DispatcherTimer test=new DispatcherTimer{Interval=TimeSpan.FromSeconds(2)};test.Tick+=(a,b)=>{test.Stop();try{TestNewFeatures(args[1]);window.VerifyExtras(args[1]);}catch(Exception ex){File.WriteAllText(args[1]+".error.txt",ex.ToString());Environment.ExitCode=1;}finally{window.Close();}};test.Start();};
                     if(args.Contains("--tray"))window.Loaded+=(s,e)=>{window.WindowState=WindowState.Minimized;};
                     if(args.Length==3&&args[1]=="--startup-test")window.Loaded+=(s,e)=>{window.SuppressNotifications=true;DispatcherTimer test=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(300)};test.Tick+=(a,b)=>{test.Stop();try{window.VerifyStartupState(args[2]);}catch(Exception ex){File.WriteAllText(args[2]+".error.txt",ex.ToString());Environment.ExitCode=1;}finally{window.Close();}};test.Start();};
-                    if(args.Length==2 && args[0]=="--visual-test") {window.Loaded+=(s,e)=>{try{new ControllerVisual().VerifyMotion();window.VerifyAnalogPreview();File.WriteAllText(args[1],"PASS: independent Stadia stick travel, pressed-button feedback, neutral reset on disconnect.");}catch(Exception ex){File.WriteAllText(args[1]+".error.txt",ex.ToString());Environment.ExitCode=1;}window.Close();};}
+                    if(args.Length==2 && args[0]=="--visual-test") {window.Loaded+=(s,e)=>{try{Ui.VerifyAccent();new ControllerVisual().VerifyMotion();window.VerifyAnalogPreview();window.VerifyAppearance(args[1]);File.WriteAllText(args[1],"PASS: controller feedback, six live accent swatches and persistence, tray restore, neutral reset on disconnect.");}catch(Exception ex){File.WriteAllText(args[1]+".error.txt",ex.ToString());Environment.ExitCode=1;}window.Close();};}
                     if(args.Length==2 && args[0]=="--performance-test") {window.Loaded+=(s,e)=>{DispatcherTimer measure=new DispatcherTimer{Interval=TimeSpan.FromSeconds(6)};measure.Tick+=(a,b)=>{measure.Stop();window.PerformanceReport(args[1]);window.Close();};measure.Start();};}
                     if(args.Length==2 && args[0]=="--smoke") {
                         window.Loaded+=(s,e)=>{DispatcherTimer shot=new DispatcherTimer{Interval=TimeSpan.FromSeconds(2)};shot.Tick+=(a,b)=>{shot.Stop();string dir=Path.GetFullPath(args[1]);Directory.CreateDirectory(dir);foreach(string route in new[]{"Mando","Sticks y gatillos","Vibración","Perfiles","Ajustes","Mando","Ajustes","Mando"}){window.SetPageForTest(route);window.ExportSnapshot(Path.Combine(dir,route.Replace(" ","-")+".png"));}window.Close();};shot.Start();};

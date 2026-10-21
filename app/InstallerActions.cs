@@ -23,7 +23,10 @@ namespace StadiaStudio {
                 if(p.ExitCode!=0)throw new InvalidOperationException("Windows no pudo completar la instalación del controlador. Consulta el registro en "+logs+".");
             }
         }
+        [DllImport("shell32.dll")] static extern void SHChangeNotify(uint eventId,uint flags,IntPtr item1,IntPtr item2);
         public static void RegisterApp() {
+            string iconPath=Path.Combine(InstallDirectory,"StadiaLink-Fluent.ico");
+            using(var input=Assembly.GetExecutingAssembly().GetManifestResourceStream("app.ico"))using(var output=File.Create(iconPath))input.CopyTo(output);
             string previous=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs),"Stadia Studio.lnk");if(File.Exists(previous))File.Delete(previous);
             object shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell"));object shortcut=null;
             try {
@@ -31,15 +34,17 @@ namespace StadiaStudio {
                 shortcut.GetType().InvokeMember("TargetPath",BindingFlags.SetProperty,null,shortcut,new object[]{Path.Combine(InstallDirectory,"StadiaLink.exe")});
                 shortcut.GetType().InvokeMember("WorkingDirectory",BindingFlags.SetProperty,null,shortcut,new object[]{InstallDirectory});
                 shortcut.GetType().InvokeMember("Description",BindingFlags.SetProperty,null,shortcut,new object[]{I18n.T("Configura tu Stadia en Windows")});
+                shortcut.GetType().InvokeMember("IconLocation",BindingFlags.SetProperty,null,shortcut,new object[]{iconPath});
                 shortcut.GetType().InvokeMember("Save",BindingFlags.InvokeMethod,null,shortcut,null);
             }finally{if(shortcut!=null)Marshal.FinalReleaseComObject(shortcut);Marshal.FinalReleaseComObject(shell);}
             using(RegistryKey key=Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\StadiaStudio")) {
                 key.SetValue("DisplayName",Brand.Title);key.SetValue("DisplayVersion","1.0.3");key.SetValue("Publisher",Brand.Stamp);
-                key.SetValue("InstallLocation",InstallDirectory);key.SetValue("DisplayIcon",Path.Combine(InstallDirectory,"StadiaLink.exe"));
+                key.SetValue("InstallLocation",InstallDirectory);key.SetValue("DisplayIcon",iconPath);
                 key.SetValue("UninstallString","\""+Path.Combine(InstallDirectory,"StadiaLink.Setup.exe")+"\" /uninstall");
                 key.SetValue("NoModify",1,RegistryValueKind.DWord);key.SetValue("NoRepair",1,RegistryValueKind.DWord);
                 long bytes=Directory.GetFiles(InstallDirectory,"*",SearchOption.AllDirectories).Sum(f=>new FileInfo(f).Length);key.SetValue("EstimatedSize",(int)(bytes/1024),RegistryValueKind.DWord);
             }
+            SHChangeNotify(0x08000000,0,IntPtr.Zero,IntPtr.Zero);
         }
         public static bool StartWithWindows {get{using(RegistryKey key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))return key!=null&&key.GetValue("StadiaStudio")!=null;}}
         public static void SaveStartup(bool enabled) {

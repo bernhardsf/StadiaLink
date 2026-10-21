@@ -6,15 +6,21 @@ using System.Windows.Markup;
 using System.Windows.Media.Animation;
 
 namespace StadiaStudio {
+    public sealed class AccentState : DependencyObject {
+        public static readonly DependencyProperty ValueProperty=DependencyProperty.Register("Value",typeof(Color),typeof(AccentState),new PropertyMetadata(Colors.Transparent));
+        public Color Value {get{return (Color)GetValue(ValueProperty);}set{SetValue(ValueProperty,value);}}
+    }
     public static class Ui {
+        static readonly AccentState accentState=new AccentState{Value=Color("#B5E879")};
+        static SolidColorBrush AccentBrush(){var brush=new SolidColorBrush();System.Windows.Data.BindingOperations.SetBinding(brush,SolidColorBrush.ColorProperty,new System.Windows.Data.Binding("Value"){Source=accentState});return brush;}
         public static Color Color(string value){return (Color)ColorConverter.ConvertFromString(value);}
         public static SolidColorBrush Brush(string value){SolidColorBrush b=new SolidColorBrush(Color(value));b.Freeze();return b;}
-        public static readonly Brush Background=Brush("#202020"),Panel=Brush("#292929"),Inset=Brush("#191919"),Line=Brush("#3C3C3C"),Text=Brush("#F5F5F5"),Muted=Brush("#B5B5B5"),Lime=new SolidColorBrush(Color("#B5E879")),Coral=Brush("#FFB4A4");
+        public static readonly Brush Background=Brush("#202020"),Panel=Brush("#292929"),Inset=Brush("#191919"),Line=Brush("#3C3C3C"),Text=Brush("#F5F5F5"),Muted=Brush("#B5B5B5"),Lime=AccentBrush(),Coral=Brush("#FFB4A4");
         public static readonly string[] AccentColors={"#B5E879","#8CC8FF","#76DDCF","#C6B6FF","#FFB3CA","#F4CA82"};
         public static void SetAccent(string value,bool persist) {
             if(Array.IndexOf(AccentColors,value)<0)return;
             if(persist)using(var key=Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\StadiaStudio")){key.SetValue("AccentColor",value);}
-            ((SolidColorBrush)Lime).Color=Color(value);
+            accentState.Value=Color(value);
         }
         static Ui(){using(var key=Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\StadiaStudio")){if(key!=null)SetAccent((string)key.GetValue("AccentColor","#B5E879"),false);}}
         public static TextBlock T(string text,double size,Brush color=null,bool bold=false) {
@@ -59,6 +65,7 @@ namespace StadiaStudio {
             if(setup)xaml=xaml.Replace("#CAF57A","#60CDFF").Replace("#101517","#202020").Replace("#131B1E","#292929").Replace("#E9EEEB","#F5F5F5").Replace("CornerRadius='10'","CornerRadius='4'");
             resources.MergedDictionaries.Add((ResourceDictionary)XamlReader.Parse(xaml));
         }
+        public static void VerifyAccent(){string original=accentState.Value.ToString();try{foreach(string value in AccentColors){SetAccent(value,false);if(((SolidColorBrush)Lime).Color!=Color(value)||Lime.IsFrozen)throw new Exception("Live accent update failed: "+value);}}finally{accentState.Value=Color(original);}}
         public static FrameworkElement Gap(int pixels){return new Border{Height=pixels};}
         public static FrameworkElement Logo(double size){
             using(var stream=System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("logo.xaml")) {

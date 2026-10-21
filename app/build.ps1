@@ -8,7 +8,7 @@ $framework="$env:windir\Microsoft.NET\Framework64\v4.0.30319"
 $refs=@('System.dll','System.Core.dll','System.Runtime.Serialization.dll','System.Xaml.dll','System.Windows.Forms.dll','System.Drawing.dll','WPF\WindowsBase.dll','WPF\PresentationCore.dll','WPF\PresentationFramework.dll') | ForEach-Object { '/reference:'+(Join-Path $framework $_) }
 $sources='App.cs','Brand.cs','Ui.cs','Model.cs','Controller.cs','ControllerVisual.cs','MainWindow.cs','InstallerActions.cs','DesktopActions.cs','BatteryTray.cs','DeviceNotifications.cs','I18n.cs','UpdateChecker.cs' | ForEach-Object {Join-Path $PSScriptRoot $_}
 & "$PSScriptRoot\create-icon.ps1" -OutputPath "$PSScriptRoot\StadiaLink.ico"
-& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 /win32manifest:"$PSScriptRoot\app.manifest" /resource:"$PSScriptRoot\assets\logo.xaml,logo.xaml" /win32icon:"$PSScriptRoot\StadiaLink.ico" /resource:"$PSScriptRoot\assets\locales.tsv,locales.tsv" /out:"$out\StadiaLink.exe" $refs $sources
+& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 /win32manifest:"$PSScriptRoot\app.manifest" /resource:"$PSScriptRoot\assets\logo.xaml,logo.xaml" /win32icon:"$PSScriptRoot\StadiaLink.ico" /resource:"$PSScriptRoot\StadiaLink.ico,app.ico" /resource:"$PSScriptRoot\assets\locales.tsv,locales.tsv" /out:"$out\StadiaLink.exe" $refs $sources
 if($LASTEXITCODE){throw 'App compilation failed'}
 Copy-Item "$PSScriptRoot\StadiaLink.exe.config" $out
 & "$PSScriptRoot\build-native.ps1"
