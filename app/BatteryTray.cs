@@ -10,7 +10,7 @@ namespace StadiaStudio {
   public static int? Read(ulong address){int level;int hr=StadiaReadBattery(address,out level);return hr>=0&&level>=0&&level<=100?(int?)level:null;}
  }
  public sealed class BatteryTray:IDisposable {
-  readonly Forms.NotifyIcon tray=new Forms.NotifyIcon();readonly Icon logo;
+  readonly Forms.NotifyIcon tray=new Forms.NotifyIcon();readonly Icon logo;Icon batteryIcon;
   readonly Forms.ToolStripMenuItem level=new Forms.ToolStripMenuItem("Batería: —"){Enabled=false};int? lastLevel;bool lastConnected;bool lastCharging;bool first=true;
   readonly Queue<DeviceNotice> pending=new Queue<DeviceNotice>();readonly Forms.Timer noticeTimer=new Forms.Timer{Interval=6500};
   string lastLanguage;bool updateNotice;public Action UpdateClicked;
@@ -26,14 +26,30 @@ namespace StadiaStudio {
    level.Text=I18n.T(!connected?"Mando desconectado":percent.HasValue?"Batería: "+percent.Value+" %":"Batería: no disponible");
    tray.Text=I18n.T(!connected?"StadiaLink · sin mando":percent.HasValue?"Stadia · "+percent.Value+" %":"StadiaLink · batería no disponible");
    if(connected&&charging){string suffix=I18n.T(percent==100?" · Carga completa":" · Cargando");level.Text+=suffix;tray.Text=(tray.Text+suffix).Substring(0,Math.Min(63,tray.Text.Length+suffix.Length));}
-   // Keep the product mark readable; battery details belong in the tooltip and menu.
-   tray.Icon=logo;
+   // Use a battery silhouette for live status; keep branding in the taskbar.
+   Icon next=null;
+   if(connected&&percent.HasValue)using(var bitmap=DrawBadge(percent.Value,charging)){
+    IntPtr handle=bitmap.GetHicon();try{using(var borrowed=Icon.FromHandle(handle))next=(Icon)borrowed.Clone();}finally{DestroyIcon(handle);}
+   }
+   tray.Icon=next??logo;Icon previous=batteryIcon;batteryIcon=next;if(previous!=null)previous.Dispose();
   }
   void ShowNotice(DeviceNotice notice){updateNotice=notice.Title=="Actualización disponible";tray.ShowBalloonTip(5000,I18n.T(notice.Title),I18n.T(notice.Text),notice.Warning?Forms.ToolTipIcon.Warning:Forms.ToolTipIcon.Info);}
   public void Notify(DeviceNotice notice){if(noticeTimer.Enabled){if(pending.Count<8)pending.Enqueue(notice);}else{ShowNotice(notice);noticeTimer.Start();}}
   public void ClearNotifications(){pending.Clear();noticeTimer.Stop();}
-  public static Bitmap DrawBadge(int percent){Bitmap bitmap=new Bitmap(16,16);string[] glyphs={"111101101101111","010110010010111","111001111100111","111001111001111","101101111001001","111100111001111","111100111101111","111001001001001","111101111101111","111101111001111"};string digits=percent.ToString();int sx=digits.Length==3?1:2,sy=2,width=digits.Length*(3*sx+1)-1,x0=(16-width)/2;using(Graphics g=Graphics.FromImage(bitmap))using(SolidBrush ink=new SolidBrush(Color.White))using(SolidBrush charge=new SolidBrush(percent<=15?Color.FromArgb(255,138,112):Color.FromArgb(202,245,122))){g.Clear(Color.FromArgb(16,21,23));for(int d=0;d<digits.Length;d++)for(int y=0;y<5;y++)for(int x=0;x<3;x++)if(glyphs[digits[d]-'0'][y*3+x]=='1')g.FillRectangle(ink,x0+d*(3*sx+1)+x*sx,1+y*sy,sx,sy);g.FillRectangle(charge,1,13,Math.Max(1,(int)Math.Round(14*percent/100.0)),2);}return bitmap;}
-  public void Dispose(){noticeTimer.Dispose();tray.Visible=false;tray.Dispose();if(logo!=null)logo.Dispose();}
+  public static Bitmap DrawBadge(int percent){return DrawBadge(percent,false);}
+  public static Bitmap DrawBadge(int percent,bool charging){
+   percent=Math.Max(0,Math.Min(100,percent));var bitmap=new Bitmap(16,16);
+   using(var g=Graphics.FromImage(bitmap))using(var outline=new SolidBrush(Color.FromArgb(240,244,242)))using(var background=new SolidBrush(Color.FromArgb(35,40,43)))using(var fill=new SolidBrush(percent<=15?Color.FromArgb(255,117,107):Color.FromArgb(181,232,121))){
+    g.Clear(Color.Transparent);
+    g.FillRectangle(outline,1,3,12,10);g.FillRectangle(outline,13,6,2,4);
+    g.FillRectangle(background,2,4,10,8);
+    int width=(int)Math.Round(8*percent/100.0);if(percent>0)width=Math.Max(1,width);
+    if(width>0)g.FillRectangle(fill,3,5,width,6);
+    if(charging){var bolt=new[]{new Point(8,3),new Point(5,8),new Point(7,8),new Point(6,13),new Point(10,7),new Point(8,7)};g.FillPolygon(outline,bolt);}
+   }
+   return bitmap;
+  }
+  public void Dispose(){noticeTimer.Dispose();tray.Visible=false;tray.Dispose();if(batteryIcon!=null)batteryIcon.Dispose();if(logo!=null)logo.Dispose();}
  }
 }
 

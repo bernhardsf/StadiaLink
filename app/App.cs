@@ -11,8 +11,8 @@ using System.Reflection;
 [assembly:AssemblyDescription("Personal local build by bernhardsf. Do not distribute.")]
 [assembly:AssemblyCompany("bernhardsf")]
 [assembly:AssemblyProduct("StadiaLink")]
-[assembly:AssemblyVersion("1.0.3.0")]
-[assembly:AssemblyFileVersion("1.0.3.0")]
+[assembly:AssemblyVersion("1.0.4.0")]
+[assembly:AssemblyFileVersion("1.0.4.0")]
 
 namespace StadiaStudio {
     public static class Entry {
@@ -108,6 +108,13 @@ namespace StadiaStudio {
             alerts.Observe(false,null,time.AddSeconds(9));Assert(alerts.Observe(false,null,time.AddSeconds(10)).Count==1,"disconnected notification");
             Profile p=new Profile();p.EnsureActions();p.Map[0]=0;p.Actions[0]=14;p.Keys[0]=121;p.Modifiers[0]=3;Assert(Profile.FromJson(p.ToJson()).Actions[0]==14,"tap shortcut JSON");
             var emitted=new System.Collections.Generic.List<string>();using(DesktopActions engine=new DesktopActions()){engine.Send=(k,up)=>emitted.Add(k+":"+up);PadStatus s=new PadStatus{HasInput=true};s.Raw[1]=8;engine.Update(s,p);s.Raw[3]=64;engine.Update(s,p);Assert(emitted.Count==6&&emitted.Last()=="17:True","tap keys released immediately");engine.Update(s,p);Assert(emitted.Count==6,"tap not repeated while held");s.Raw[3]=0;engine.Update(s,p);s.Raw[3]=64;engine.Update(s,p);Assert(emitted.Count==12,"second press repeats shortcut");}
+            using(var empty=BatteryTray.DrawBadge(0))using(var low=BatteryTray.DrawBadge(10))using(var full=BatteryTray.DrawBadge(100))using(var charging=BatteryTray.DrawBadge(100,true)){
+                Assert(empty.GetPixel(0,0).A==0,"tray background is transparent");
+                Assert(empty.GetPixel(3,5)!=low.GetPixel(3,5),"low battery has visible charge");
+                Assert(empty.GetPixel(10,5)!=full.GetPixel(10,5),"full battery fills capacity");
+                Assert(low.GetPixel(3,5)!=full.GetPixel(3,5),"low battery warning color");
+                Assert(charging.GetPixel(7,7)!=full.GetPixel(7,7),"charging indicator visible");
+            }
             string preview=file+".png";using(var sheet=new System.Drawing.Bitmap(480,144))using(var g=System.Drawing.Graphics.FromImage(sheet)){g.Clear(System.Drawing.Color.FromArgb(26,34,37));g.InterpolationMode=System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;g.PixelOffsetMode=System.Drawing.Drawing2D.PixelOffsetMode.Half;int[] values={0,9,15,58,99,100};for(int i=0;i<values.Length;i++)using(var icon=BatteryTray.DrawBadge(values[i])){Assert(icon.Width==16&&icon.Height==16,"native tray icon size");g.DrawImage(icon,new System.Drawing.Rectangle(i*80,0,64,64));g.DrawImageUnscaled(icon,i*80+24,90);}sheet.Save(preview,System.Drawing.Imaging.ImageFormat.Png);}
             File.WriteAllText(file,"PASS: connection debounce; one low-battery alert; unknown battery handling; full-battery crossing; disconnect; tap shortcut serialization and edge behavior; native-size badge preview. No global keys or notifications sent.");
         }

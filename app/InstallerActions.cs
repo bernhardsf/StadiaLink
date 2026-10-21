@@ -38,7 +38,7 @@ namespace StadiaStudio {
                 shortcut.GetType().InvokeMember("Save",BindingFlags.InvokeMethod,null,shortcut,null);
             }finally{if(shortcut!=null)Marshal.FinalReleaseComObject(shortcut);Marshal.FinalReleaseComObject(shell);}
             using(RegistryKey key=Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\StadiaStudio")) {
-                key.SetValue("DisplayName",Brand.Title);key.SetValue("DisplayVersion","1.0.3");key.SetValue("Publisher",Brand.Stamp);
+                key.SetValue("DisplayName",Brand.Title);key.SetValue("DisplayVersion","1.0.4");key.SetValue("Publisher",Brand.Stamp);
                 key.SetValue("InstallLocation",InstallDirectory);key.SetValue("DisplayIcon",iconPath);
                 key.SetValue("UninstallString","\""+Path.Combine(InstallDirectory,"StadiaLink.Setup.exe")+"\" /uninstall");
                 key.SetValue("NoModify",1,RegistryValueKind.DWord);key.SetValue("NoRepair",1,RegistryValueKind.DWord);

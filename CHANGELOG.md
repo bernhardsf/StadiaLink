@@ -1,3 +1,8 @@
+## 1.0.4
+
+- Restore live battery level in the notification-area icon, with low-battery color and charging indicator.
+- Preserve exact battery percentage in the tooltip and single-click window restore.
+
 # Changelog
 
 ## 1.0.3
